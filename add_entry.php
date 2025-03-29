@@ -27,6 +27,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         die("Invalid type value. Must be 'income' or 'expense'.");
     }
 
+    // Fetch current balance
+    $balance_query = $conn->prepare("SELECT SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) AS balance FROM transactions WHERE user_id = ?");
+    $balance_query->bind_param("i", $user_id);
+    $balance_query->execute();
+    $result = $balance_query->get_result();
+    $row = $result->fetch_assoc();
+    $current_balance = $row['balance'] ?? 0; // Default to 0 if no transactions
+
+    // Prevent negative balance
+    if ($type == 'expense' && $amount > $current_balance) {
+        die("Error: Insufficient balance to cash out!");
+    }
+
     // Prepare SQL query
     $stmt = $conn->prepare("INSERT INTO transactions (user_id, type, amount, details, created_at) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("isdss", $user_id, $type, $amount, $details, $datetime);

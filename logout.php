@@ -1,6 +1,6 @@
 <?php
 session_start();
 session_destroy();
-header("Location: login.php");
+header("Location: index.php"); // Redirect to your homepage
 exit();
 ?>
